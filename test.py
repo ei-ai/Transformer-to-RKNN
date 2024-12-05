@@ -1,98 +1,103 @@
 import numpy as np
 import torch
 from rknn.api import RKNN
-from transformer import TransformerModel
-from load_datasets import src_vocab, tgt_vocab, data_process, token_transform
+from transformer import TransformerModel  # Import Transformer model
+from load_datasets import src_vocab, tgt_vocab  # Import vocabularies
 import os
 
+
 def export_transformer_model():
-    # Transformer 모델 초기화
-    input_dim = len(src_vocab)
+    """
+    Function to export the Transformer model as a TorchScript file.
+    """
+    input_dim = len(src_vocab)  # Vocabulary size from source
     embed_dim = 512
     num_heads = 8
     ff_dim = 2048
     num_layers = 6
     dropout = 0.1
-    
-    model = TransformerModel(input_dim, embed_dim, num_heads, ff_dim, num_layers, dropout)
-    model.eval()
-    
-    # 임의의 입력 데이터로 TorchScript 변환
-    dummy_input = torch.randint(0, input_dim, (1, 50))  # (batch_size, sequence_length)
-    trace_model = torch.jit.trace(model, dummy_input)
+
+    # Initialize Transformer model
+    net = TransformerModel(input_dim, embed_dim, num_heads, ff_dim, num_layers, dropout)
+    net.eval()
+
+    # Export model to TorchScript
+    dummy_input = torch.randint(0, input_dim, (1, 50))  # Example input: batch_size=1, seq_len=50
+    trace_model = torch.jit.trace(net, dummy_input)
     trace_model.save('./transformer.pt')
 
 
-def show_outputs(output, vocab):
-    index = torch.argmax(output, dim=-1).squeeze(0).tolist()
-    output_str = "Decoded Sequence:\n" + " ".join(vocab.itos[idx] for idx in index)
-    print(output_str)
-
-
-def softmax(x):
-    return np.exp(x) / sum(np.exp(x))
+def show_outputs(output):
+    """
+    Decodes the Transformer model output and prints the translated sequence.
+    """
+    decoded_sequence = output.argmax(dim=-1).squeeze(0).tolist()
+    translated_sentence = " ".join(
+        tgt_vocab.itos[idx] for idx in decoded_sequence if idx not in {tgt_vocab['<pad>'], tgt_vocab['<eos>']}
+    )
+    print(f"Translated Sentence: {translated_sentence}")
 
 
 if __name__ == '__main__':
-    # Transformer 모델 파일 경로
+    # Check if the TorchScript model exists, export if not
     model_path = './transformer.pt'
     if not os.path.exists(model_path):
         export_transformer_model()
-    
-    input_size_list = [[1, 50]]  # Transformer 입력 크기 (배치, 시퀀스 길이)
+
+    # Transformer input shape: [batch_size, seq_len]
+    input_size_list = [[1, 50]]
     rknn = RKNN(verbose=True)
-    
-    # RKNN 설정
-    print('--> Config model')
-    rknn.config(target_platform='rk3588')  # 필요시 mean_values와 std_values 추가 가능
+
+    # Configure RKNN
+    print('--> Configuring RKNN model')
+    rknn.config(target_platform='rk3588')
     print('done')
 
-    # PyTorch 모델 로드
+    # Load TorchScript model
     print('--> Loading Transformer model')
     ret = rknn.load_pytorch(model=model_path, input_size_list=input_size_list)
     if ret != 0:
-        print('Load model failed!')
+        print('Failed to load model!')
         exit(ret)
     print('done')
 
-    # RKNN 모델 빌드
-    print('--> Building model')
-    ret = rknn.build(do_quantization=False)  # 양자화 없이 진행
+    # Build RKNN model
+    print('--> Building RKNN model')
+    ret = rknn.build(do_quantization=False)  # Quantization optional for NLP tasks
     if ret != 0:
-        print('Build model failed!')
+        print('Failed to build model!')
         exit(ret)
     print('done')
 
-    # RKNN 모델 내보내기
-    print('--> Export rknn model')
+    # Export RKNN model
+    print('--> Exporting RKNN model')
     ret = rknn.export_rknn('./transformer.rknn')
     if ret != 0:
-        print('Export rknn model failed!')
+        print('Failed to export RKNN model!')
         exit(ret)
     print('done')
 
-    # 데이터 로드 및 전처리
+    # Prepare input data
     print('--> Preparing input data')
-    sample_sentence = "Hallo Welt!"  # 예제 문장
-    src_tokenizer = token_transform['de']
-    tgt_vocab = tgt_vocab
-    src_tensor = torch.tensor([src_vocab[token] for token in src_tokenizer(sample_sentence)], dtype=torch.long).unsqueeze(0)  # (1, seq_len)
+    src_sentence = "Hallo Welt!"  # Example German sentence
+    src_indices = [src_vocab[token] for token in src_sentence.split()]
+    src_tensor = torch.tensor([src_vocab['<bos>']] + src_indices + [src_vocab['<eos>']], dtype=torch.long).unsqueeze(0)
     print('done')
 
-    # RKNN 런타임 환경 초기화
-    print('--> Init runtime environment')
+    # Initialize RKNN runtime environment
+    print('--> Initializing RKNN runtime environment')
     ret = rknn.init_runtime(target)
     if ret != 0:
-        print('Init runtime environment failed!')
+        print('Failed to initialize runtime!')
         exit(ret)
     print('done')
 
-    # 추론 수행
-    print('--> Running Transformer model')
+    # Run inference
+    print('--> Running inference on Transformer model')
     outputs = rknn.inference(inputs=[src_tensor.numpy()])
-    np.save('./transformer_output.npy', outputs[0])
-    show_outputs(torch.tensor(outputs[0]), tgt_vocab)
+    np.save('./transformer_output.npy', outputs[0])  # Save outputs for analysis
+    show_outputs(torch.tensor(outputs[0]))  # Decode and display output
     print('done')
 
-    # RKNN 객체 해제
+    # Release RKNN resources
     rknn.release()
