@@ -5,6 +5,7 @@ from transformer import TransformerModel  # Import Transformer model
 from load_datasets import src_vocab, tgt_vocab  # Import vocabularies
 import os
 
+# 만약 오류가 생긴다면 export_transformer_model()과 input_size_list을 의심해볼것
 
 def export_transformer_model():
     """
@@ -27,7 +28,7 @@ def export_transformer_model():
     trace_model.save('./transformer.pt')
 
 
-def show_outputs(output):
+def show_outputs(output): ## RKNN파일 생성에는 영향을 주지 않음
     """
     Decodes the Transformer model output and prints the translated sequence.
     """
@@ -76,7 +77,12 @@ if __name__ == '__main__':
         print('Failed to export RKNN model!')
         exit(ret)
     print('done')
+    ## 여기가지 RKNN 모델 생성
+    ## 일단 원본 내용과 1대1 대응이기 때문에 큰 문제는 없어 보임
 
+
+    
+    ## 이 이후로는 변환된 모델로 돌려보기 실험
     # Prepare input data
     print('--> Preparing input data')
     src_sentence = "Hallo Welt!"  # Example German sentence
