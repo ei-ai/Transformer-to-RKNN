@@ -4,7 +4,7 @@ from transformer import Transformer
 
 if __name__ == "__main__":
     DATASET_TXT_PATH = "./tgtdataset.txt"
-    MODEL_PATH = './transformer.pt' 
+    MODEL_PATH = './transformer_scripted.pt' 
     RKNN_MODEL_PATH = './transformer.rknn'
 
     src_vocab_size = 3079  
