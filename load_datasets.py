@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torchtext.datasets import IWSLT2017  
+from datasets import load_dataset
+
+WMT19 = load_dataset("wmt/wmt19", "de-en")
 
 class TranslationDataset(Dataset):
     def __init__(self, data_iter, src_vocab=None, tgt_vocab=None):
@@ -36,8 +38,10 @@ def collate_fn(batch):
     return src_padded, tgt_padded
 
 if __name__ == "__main__":
-    train_iter = IWSLT2017(split='train', language_pair=('de', 'en'))
-    val_iter = IWSLT2017(split='valid', language_pair=('de', 'en'))
+    train_data = WMT19["train"]
+    val_data = WMT19["validation"]
+    train_iter = [(example["translation"]["de"], example["translation"]["en"]) for example in train_data]
+    val_iter = [(example["translation"]["de"], example["translation"]["en"]) for example in val_data]
 
     train_dataset = TranslationDataset(train_iter)
     val_dataset = TranslationDataset(val_iter)
