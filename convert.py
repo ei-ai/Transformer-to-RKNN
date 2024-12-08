@@ -4,19 +4,13 @@ from transformer import Transformer
 
 if __name__ == "__main__":
     DATASET_TXT_PATH = "./tgtdataset.txt"
-    MODEL_PATH = './transformer_traced.pt' 
+    MODEL_PATH = './transformer_scripted.pt' 
     RKNN_MODEL_PATH = './transformer.rknn'
 
     src_vocab_size = 3079  
     tgt_vocab_size = 2829  
 
     rknn = RKNN()
-
-    scripted_model = torch.jit.load('./transformer_scripted.pt')
-    print(scripted_model)
-
-    traced_model = torch.jit.load('./transformer_traced.pt')
-    print(traced_model)
 
     print('--> Configuring RKNN model')
     rknn.config(target_platform='rk3588')
