@@ -1,39 +1,51 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchtext.datasets import Multi30k, WMT14
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from torchtext.datasets import IWSLT2017  
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+class TranslationDataset(Dataset):
+    def __init__(self, data_iter, src_vocab=None, tgt_vocab=None):
+        self.data = list(data_iter)
+        self.src_vocab = src_vocab
+        self.tgt_vocab = tgt_vocab
 
-# 토크나이저 및 Vocab 구축
-SRC_LANGUAGE = 'de'
-TGT_LANGUAGE = 'en'
+    def __len__(self):
+        return len(self.data)
 
-token_transform = {
-    SRC_LANGUAGE: get_tokenizer('spacy', language='de_core_news_sm'),
-    TGT_LANGUAGE: get_tokenizer('spacy', language='en_core_web_sm'),
-}
+    def __getitem__(self, idx):
+        src, tgt = self.data[idx]
 
-def build_vocab(dataset_iter, tokenizer):
-    vocab = build_vocab_from_iterator(map(tokenizer, dataset_iter), specials=["<unk>", "<pad>", "<bos>", "<eos>"])
-    vocab.set_default_index(vocab["<unk>"])
-    return vocab
+        if self.src_vocab:
+            src = [self.src_vocab[token] for token in src.split()]
+        if self.tgt_vocab:
+            tgt = [self.tgt_vocab[token] for token in tgt.split()]
 
-train_iter = Multi30k(split='train', language_pair=(SRC_LANGUAGE, TGT_LANGUAGE))
-src_vocab = build_vocab((src for src, tgt in train_iter), token_transform[SRC_LANGUAGE])
-tgt_vocab = build_vocab((tgt for src, tgt in train_iter), token_transform[TGT_LANGUAGE])
+        return torch.tensor(src, dtype=torch.long), torch.tensor(tgt, dtype=torch.long)
 
-# 데이터셋 처리 함수
-def data_process(raw_text_iter, src_vocab, tgt_vocab, src_tokenizer, tgt_tokenizer):
-    data = []
-    for src, tgt in raw_text_iter:
-        src_tensor = torch.tensor([src_vocab[token] for token in src_tokenizer(src)], dtype=torch.long)
-        tgt_tensor = torch.tensor([tgt_vocab[token] for token in tgt_tokenizer(tgt)], dtype=torch.long)
-        data.append((src_tensor, tgt_tensor))
-    return data
+def collate_fn(batch):
+    src_batch, tgt_batch = zip(*batch)
+    src_lens = [len(x) for x in src_batch]
+    tgt_lens = [len(x) for x in tgt_batch]
 
-train_iter, valid_iter, test_it
+    src_padded = torch.zeros(len(batch), max(src_lens), dtype=torch.long)
+    tgt_padded = torch.zeros(len(batch), max(tgt_lens), dtype=torch.long)
 
+    for i, (src, tgt) in enumerate(batch):
+        src_padded[i, :len(src)] = src
+        tgt_padded[i, :len(tgt)] = tgt
+
+    return src_padded, tgt_padded
+
+if __name__ == "__main__":
+    train_iter = IWSLT2017(split='train', language_pair=('de', 'en'))
+    val_iter = IWSLT2017(split='valid', language_pair=('de', 'en'))
+
+    train_dataset = TranslationDataset(train_iter)
+    val_dataset = TranslationDataset(val_iter)
+
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, collate_fn=collate_fn)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, collate_fn=collate_fn)
+
+    for src_batch, tgt_batch in train_loader:
+        print("Source batch shape:", src_batch.shape)
+        print("Target batch shape:", tgt_batch.shape)
+        break
