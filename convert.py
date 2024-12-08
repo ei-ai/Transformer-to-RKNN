@@ -9,10 +9,6 @@ if __name__ == "__main__":
 
     src_vocab_size = 3079  
     tgt_vocab_size = 2829  
-    
-    print('--> Saving PyTorch model')
-    torch.save(model, MODEL_PATH) 
-    print(f'Model saved to {MODEL_PATH}')
 
     rknn = RKNN()
 
