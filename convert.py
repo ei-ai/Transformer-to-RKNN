@@ -22,7 +22,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load('./transformer.pt')) 
     model.eval()
 
-    ret = rknn.load_pytorch(model=model, input_size_list=[[32, 20, 512]])
+    ret = rknn.load_pytorch(model=MODEL_PATH, input_size_list=[[32, 20, 512]])
     if ret != 0:
         print('Load model failed!')
         exit(ret)
