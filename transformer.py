@@ -56,5 +56,7 @@ if __name__ == "__main__":
     output = model(src, tgt)
     print(output.shape)
     torch.save(model.state_dict(), 'transformer_state_dict.pt')
+    scripted_model = torch.jit.script(model)
+    scripted_model.save("transformer.pt")
 
 
