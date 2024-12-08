@@ -60,3 +60,4 @@ if __name__ == "__main__":
     print(f"Source vocab size: {src_vocab_size}, Target vocab size: {tgt_vocab_size}")
     model = Transformer(src_vocab_size=src_vocab_size, tgt_vocab_size=tgt_vocab_size)
     torch.save(model.state_dict(), './transformer.pt')  # Save model
+    torch.save(model, './trans.pth'))
