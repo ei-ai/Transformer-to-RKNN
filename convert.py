@@ -4,8 +4,18 @@ from transformer import Transformer
 
 if __name__ == "__main__":
     DATASET_TXT_PATH = "./tgtdataset.txt"
-    MODEL_PATH = './transformer.pt'
+    MODEL_PATH = './transformer.pth' 
     RKNN_MODEL_PATH = './transformer.rknn'
+
+    src_vocab_size = 3079  
+    tgt_vocab_size = 2829  
+    model = Transformer(src_vocab_size=src_vocab_size, tgt_vocab_size=tgt_vocab_size)
+    model.load_state_dict(torch.load('./transformer.pt')) 
+    model.eval()
+
+    print('--> Saving PyTorch model')
+    torch.save(model, MODEL_PATH) 
+    print(f'Model saved to {MODEL_PATH}')
 
     rknn = RKNN()
 
@@ -13,12 +23,8 @@ if __name__ == "__main__":
     rknn.config(target_platform='rk3588')
     print('done')
 
-    print('--> Loading PyTorch model')
-    model = Transformer(src_vocab_size=3079, tgt_vocab_size=2829)  # Adjust as needed
-    model.load_state_dict(torch.load(MODEL_PATH))
-    model.eval()
-
-    ret = rknn.load_pytorch(model=model, input_size_list=[[32, 20, 512]])
+    print('--> Loading PyTorch model into RKNN')
+    ret = rknn.load_pytorch(model=MODEL_PATH, input_size_list=[[32, 20, 512]])
     if ret != 0:
         print('Load model failed!')
         exit(ret)
@@ -36,6 +42,5 @@ if __name__ == "__main__":
     if ret != 0:
         print('Export RKNN model failed!')
         exit(ret)
-    print('done')
+    print(f'RKNN model has been successfully exported to {RKNN_MODEL_PATH}')
 
-    print(f"RKNN model has been successfully exported to {RKNN_MODEL_PATH}")
