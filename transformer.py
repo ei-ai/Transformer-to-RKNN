@@ -55,3 +55,6 @@ if __name__ == "__main__":
     tgt = torch.randint(0, 10000, (32, 20))
     output = model(src, tgt)
     print(output.shape)
+    torch.save(model.state_dict(), 'transformer_state_dict.pt')
+
+
