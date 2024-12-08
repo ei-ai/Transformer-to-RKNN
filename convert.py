@@ -1,28 +1,31 @@
-
 from rknn.api import RKNN
+import torch
+from transformer import Transformer
 
 if __name__ == "__main__":
-    DATASET_TXT_PATH = "./dataset.txt"
+    DATASET_TXT_PATH = "./tgtdataset.txt"
     MODEL_PATH = './transformer.pt'
     RKNN_MODEL_PATH = './transformer.rknn'
 
     rknn = RKNN()
 
     print('--> Configuring RKNN model')
-    mean_values = [0] * 20
-    std_values = [1] * 20
-    rknn.config(mean_values=mean_values, std_values=std_values, target_platform='rk3588')
+    rknn.config(target_platform='rk3588')
     print('done')
 
     print('--> Loading PyTorch model')
-    ret = rknn.load_pytorch(model=MODEL_PATH, input_size_list=[[32, 20]])
+    model = Transformer(src_vocab_size=10000, tgt_vocab_size=10000)  # Adjust as needed
+    model.load_state_dict(torch.load(MODEL_PATH))
+    model.eval()
+
+    ret = rknn.load_pytorch(model=model, input_size_list=[[32, 20, 512]])
     if ret != 0:
         print('Load model failed!')
         exit(ret)
     print('done')
 
     print('--> Building RKNN model')
-    ret = rknn.build(do_quantization=True, dataset=DATASET_TXT_PATH)
+    ret = rknn.build(do_quantization=True)
     if ret != 0:
         print('Build model failed!')
         exit(ret)
