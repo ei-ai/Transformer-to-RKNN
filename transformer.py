@@ -63,3 +63,5 @@ if __name__ == "__main__":
     torch.save(model, './transformer.pth')
     transformer_scripted = torch.jit.script(model) 
     transformer_scripted.save('./transformer_scripted.pt')
+    transformer_traced = torch.jit.trace(model) 
+    transformer_traced.save('./transformer_traced.pt')
