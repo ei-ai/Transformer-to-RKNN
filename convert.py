@@ -14,7 +14,7 @@ if __name__ == "__main__":
     print('done')
 
     print('--> Loading PyTorch model')
-    model = Transformer(src_vocab_size=10000, tgt_vocab_size=10000)  # Adjust as needed
+    model = Transformer(src_vocab_size=3079, tgt_vocab_size=2829)  # Adjust as needed
     model.load_state_dict(torch.load(MODEL_PATH))
     model.eval()
 
