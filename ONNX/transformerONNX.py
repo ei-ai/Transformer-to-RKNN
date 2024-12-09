@@ -102,8 +102,8 @@ def build_vocab(file_path):
     return vocab
 
 if __name__ == "__main__":
-    src_vocab = build_vocab('./srcdataset.txt')
-    tgt_vocab = build_vocab('./tgtdataset.txt')
+    src_vocab = build_vocab('../datasets/srcdataset.txt')
+    tgt_vocab = build_vocab('../datasets/tgtdataset.txt')
     src_vocab_size = len(src_vocab)
     tgt_vocab_size = len(tgt_vocab)
 
