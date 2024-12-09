@@ -1,6 +1,6 @@
 # Transformer-to-RKNN
 
-`./ONNX`에 모델 변환 파일 있음
+`./ONNX`에 모델 변환 파일 있음  
 `./pytorch`는 버전 충돌로 인하여 제대로 추출 안됨
 
 <details>
