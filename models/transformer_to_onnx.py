@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 from transformer import Transformer
 
-src_PATH = '../datasets_WMT/src_19_de.pt' 
-tgt_PATH = '../datasets_WMT/tgt_19_en.pt' 
+src_PATH = '../datasets_WMT/src_19_de.pt'
+tgt_PATH = '../datasets_WMT/tgt_19_en.pt'
 
 def export_to_onnx(model, src_vocab_size, tgt_vocab_size, file_name="transformer.onnx"):
     dummy_src = torch.randint(0, src_vocab_size, (1, 10))
     dummy_tgt = torch.randint(0, tgt_vocab_size, (1, 10))
-    torch.onnx.export(model, (dummy_src, dummy_tgt), file_name, opset_version=13, input_names=['src', 'tgt'], output_names=['output'])
+    torch.onnx.export(model, (dummy_src, dummy_tgt), file_name, opset_version=11, input_names=['src', 'tgt'], output_names=['output'])
 
 def main():
     src_vocab_size = 32000
