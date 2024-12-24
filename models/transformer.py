@@ -11,7 +11,7 @@ class CustomScaledDotProductAttention(nn.Module):
 
     def forward(self, query, key, value, mask=None):
         d_k = query.size(-1)
-        scores = torch.matmul(query, key.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
+        scores = torch.matmul(query, key.transpose(-2, -1)) / (d_k ** 0.5)
 
         if mask is not None:
             scores = scores.masked_fill(mask == 0, float('-inf'))
